@@ -15,8 +15,10 @@ def build_train_op(self):
     self.framework.loss(self.out)
     self.say('Building {} train op'.format(self.meta['model']))
     optimizer = self._TRAINER[self.FLAGS.trainer](self.FLAGS.lr)
+    #计算loss对于指定val_list的导数,返回的是元组列表，即[(gradient, variable),...]。
+    #val_list默认是graph收集的所有变量
     gradients = optimizer.compute_gradients(self.framework.loss)
-    self.train_op = optimizer.apply_gradients(gradients)
+    self.train_op = optimizer.apply_gradients(gradients)#将梯度应用到变量中，分两步的原因是可以在apply之前对梯度进行处理
 
 def load_from_ckpt(self):
     if self.FLAGS.load < 0: # load lastest ckpt

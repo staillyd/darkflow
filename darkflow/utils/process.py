@@ -8,6 +8,7 @@ import os
 
 def parser(model):
 	"""
+	将.cfg里的 crop+网络主干 的参数 存入字典layers里;将模型的一些具体参数 存入字典meta里
 	Read the .cfg file to extract layers into `layers`
 	as well as model-specific parameters into `meta`
 	"""
@@ -25,29 +26,29 @@ def parser(model):
 		line = line.strip()
 		line = line.split('#')[0]
 		if '[' in line:
-			if layer != dict(): 
-				if layer['type'] == '[net]': 
+			if layer != dict(): #在cfg第二个以及之后的[]时
+				if layer['type'] == '[net]': #如果上一个结构是[net]
 					h = layer['height']
 					w = layer['width']
 					c = layer['channels']
-					meta['net'] = layer
-				else:
-					if layer['type'] == '[crop]':
+					meta['net'] = layer #将[net]结构保存到meta['net']中
+				else:#上一个结构不是[net]时
+					if layer['type'] == '[crop]': #如果上一个结构是[crop]
 						h = layer['crop_height']
 						w = layer['crop_width']
 					layers += [layer]				
 			layer = {'type': line}
 		else:
-			try:
+			try:#如果当前行右侧是数字，转化成数字，得到(key,val)
 				i = float(_parse(line))
 				if i == int(i): i = int(i)
 				layer[line.split('=')[0].strip()] = i
-			except:
+			except:#否则直接转化为(key,val)
 				try:
 					key = _parse(line, 0)
 					val = _parse(line, 1)
 					layer[key] = val
-				except:
+				except:#空白行
 					'banana ninja yadayada'
 
 	meta.update(layer) # last layer contains meta info
@@ -56,15 +57,16 @@ def parser(model):
 		anchors = [float(x.strip()) for x in splits]
 		meta['anchors'] = anchors
 	meta['model'] = model # path to cfg, not model name
-	meta['inp_size'] = [h, w, c]
+	meta['inp_size'] = [h, w, c] #保存crop之后的[h,w,c]
 	return layers, meta
 
 def cfg_yielder(model, binary):
 	"""
 	yielding each layer information to initialize `layer`
 	"""
-	layers, meta = parser(model); yield meta;
-	h, w, c = meta['inp_size']; l = w * h * c
+	layers, meta = parser(model) #将.cfg里的 crop+网络主干 的参数 存入字典layers里;将模型的一些具体参数 存入字典meta里
+	yield meta
+	h, w, c = meta['inp_size']; l = w * h * c#裁减后的h,w,c  即输入到主干网络的h,w,c
 
 	# Start yielding
 	flat = False # flag for 1st dense layer
@@ -72,7 +74,7 @@ def cfg_yielder(model, binary):
 	for i, d in enumerate(layers):
 		#-----------------------------------------------------
 		if d['type'] == '[crop]':
-			yield ['crop', i]
+			yield ['crop', i]#裁减，新建一个Layer对象
 		#-----------------------------------------------------
 		elif d['type'] == '[local]':
 			n = d.get('filters', 1)
@@ -99,21 +101,21 @@ def cfg_yielder(model, binary):
 			batch_norm = d.get('batch_normalize', 0) or conv
 			yield ['convolutional', i, size, c, n, 
 				   stride, padding, batch_norm,
-				   activation]
-			if activation != 'linear': yield [activation, i]
+				   activation]#卷积，新建一个convolutional_layer对象
+			if activation != 'linear': yield [activation, i]#激活层，新建一个Layer对象
 			w_ = (w + 2 * padding - size) // stride + 1
 			h_ = (h + 2 * padding - size) // stride + 1
-			w, h, c = w_, h_, n
+			w, h, c = w_, h_, n#当前结构的输出size，也是下一个结构的输入size
 			l = w * h * c
 		#-----------------------------------------------------
 		elif d['type'] == '[maxpool]':
 			stride = d.get('stride', 1)
 			size = d.get('size', stride)
 			padding = d.get('padding', (size-1) // 2)
-			yield ['maxpool', i, size, stride, padding]
+			yield ['maxpool', i, size, stride, padding]#池化层，新建一个maxpool对象
 			w_ = (w + 2*padding) // d['stride'] 
 			h_ = (h + 2*padding) // d['stride']
-			w, h = w_, h_
+			w, h = w_, h_#当前结构的输出size，也是下一个结构的输入size
 			l = w * h * c
 		#-----------------------------------------------------
 		elif d['type'] == '[avgpool]':
@@ -124,16 +126,17 @@ def cfg_yielder(model, binary):
 			yield ['softmax', i, d['groups']]
 		#-----------------------------------------------------
 		elif d['type'] == '[connected]':
-			if not flat:
-				yield ['flatten', i]
+			if not flat:#迭代器里记录变量，相当于只拉直输入到第一个全连接层的神经元
+				yield ['flatten', i]#拉直，新建一个Layer对象
 				flat = True
 			activation = d.get('activation', 'logistic')
+			#此时的l是当前层的输入，d['output']是cfg文件的参数，迭代器会记录变量
 			yield ['connected', i, l, d['output'], activation]
-			if activation != 'linear': yield [activation, i]
-			l = d['output']
+			if activation != 'linear': yield [activation, i]#激活层，新建一个Layer对象
+			l = d['output']#当前结构输出的size
 		#-----------------------------------------------------
 		elif d['type'] == '[dropout]': 
-			yield ['dropout', i, d['probability']]
+			yield ['dropout', i, d['probability']]#dropout层，新建一个dropout_layer对象
 		#-----------------------------------------------------
 		elif d['type'] == '[select]':
 			if not flat:
@@ -315,7 +318,8 @@ def cfg_yielder(model, binary):
 		else:
 			exit('Layer {} not implemented'.format(d['type']))
 
-		d['_size'] = list([h, w, c, l, flat])
+		#保存到layers里了，d为layers的元素，按地址操作
+		d['_size'] = list([h, w, c, l, flat])#当前结构的输出size，也是下一个结构的输入size
 
 	if not flat: meta['out_size'] = [h, w, c]
 	else: meta['out_size'] = l

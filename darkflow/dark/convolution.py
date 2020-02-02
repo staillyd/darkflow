@@ -131,9 +131,9 @@ class convolutional_layer(Layer):
         self.ksize = ksize
         self.pad = pad
         self.dnshape = [n, c, ksize, ksize] # darknet shape
-        self.wshape = dict({
-            'biases': [n], 
-            'kernel': [ksize, ksize, c, n]
+        self.wshape = dict({#权重的size
+            'biases': [n], #偏置size
+            'kernel': [ksize, ksize, c, n]#卷积核size
         })
         if self.batch_norm:
             self.wshape.update({
@@ -147,10 +147,10 @@ class convolutional_layer(Layer):
                 'shape': ()
             }
 
-    def finalize(self, _):
+    def finalize(self, _):#将卷积核转化为darknet的
         """deal with darknet"""
-        kernel = self.w['kernel']
+        kernel = self.w['kernel']#直接从weight文件转化的memmap类型
         if kernel is None: return
-        kernel = kernel.reshape(self.dnshape)
-        kernel = kernel.transpose([2,3,1,0])
+        kernel = kernel.reshape(self.dnshape)#转化为darknet描述的权重shape
+        kernel = kernel.transpose([2,3,1,0])#转化为tf里的卷积核shape
         self.w['kernel'] = kernel

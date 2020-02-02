@@ -17,7 +17,7 @@ def cliHandler(args):
     if FLAGS.summary:
         requiredDirectories.append(FLAGS.summary)
 
-    _get_dir(requiredDirectories)
+    _get_dir(requiredDirectories)#创建相应的文件夹
 
     # fix FLAGS.load to appropriate type
     try: FLAGS.load = int(FLAGS.load)

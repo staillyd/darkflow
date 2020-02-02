@@ -5,7 +5,7 @@ from .connected import *
 class avgpool_layer(Layer):
     pass
 
-class crop_layer(Layer):
+class crop_layer(Layer):#只有初始化Layer操作
     pass
 
 class maxpool_layer(Layer):
@@ -36,6 +36,7 @@ class reorg_layer(Layer):
 
 """
 Darkop Factory
+工厂模式，映射到对应类
 """
 
 darkops = {
@@ -56,5 +57,5 @@ darkops = {
 }
 
 def create_darkop(ltype, num, *args):
-    op_class = darkops.get(ltype, Layer)
-    return op_class(ltype, num, *args)
+    op_class = darkops.get(ltype, Layer)#获取对应类，默认为Layer类
+    return op_class(ltype, num, *args)#新建一个对应对象，参数：type、num、传入到Layer.setup函数的参数

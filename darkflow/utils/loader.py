@@ -18,8 +18,9 @@ class loader(object):
         self.vals = list()
         self.load(*args)
 
-    def __call__(self, key):
-        for idx in range(len(key)):
+    def __call__(self, key):#为什么不用一个字典来映射?
+        #weight文件对应的key是[layer.presenter]，而ckpt文件对应的key是[name, shape]
+        for idx in range(len(key)):#key可能不止一个元素
             val = self.find(key, idx)
             if val is not None: return val
         return None
@@ -27,9 +28,9 @@ class loader(object):
     def find(self, key, idx):
         up_to = min(len(self.src_key), 4)
         for i in range(up_to):
-            key_b = self.src_key[i]
+            key_b = self.src_key[i]#对loader里的src_key里的每一个元素
             if key_b[idx:] == key[idx:]:
-                return self.yields(i)
+                return self.yields(i)#返回src_key对应的src_vals
         return None
 
     def yields(self, idx):
@@ -55,21 +56,22 @@ class weights_loader(loader):
 
         for i, layer in enumerate(src_layers):
             if layer.type not in self.VAR_LAYER: continue
-            self.src_key.append([layer])
+            self.src_key.append([layer])#为什么要加个[]??直接layer不行??或者用一个字典不好??
             
             if walker.eof: new = None
             else: 
                 args = layer.signature
-                new = dark.darknet.create_darkop(*args)
-            self.vals.append(new)
+                #这不是和原始的layers一样吗?为了避免干扰?
+                new = dark.darknet.create_darkop(*args)#对需要参数的一些层新建对象
+            self.vals.append(new)#保存那些需要参数的层的对象
 
             if new is None: continue
             order = self._W_ORDER[new.type]
             for par in order:
                 if par not in new.wshape: continue
-                val = walker.walk(new.wsize[par])
-                new.w[par] = val
-            new.finalize(walker.transpose)
+                val = walker.walk(new.wsize[par])#从weight文件解析出对应层的数据，并转化为numpy.memmap数据
+                new.w[par] = val#向新建的对象，添加权重
+            new.finalize(walker.transpose)#转化为tf的卷积核shape
 
         if walker.path is not None:
             assert walker.offset == walker.size, \
@@ -94,9 +96,9 @@ class checkpoint_loader(loader):
                     self.src_key += [packet]
                     self.vals += [var.eval(sess)]
 
-def create_loader(path, cfg = None):
+def create_loader(path, cfg = None):#判断从weight文件加载，还是ckpt文件加载
     if path is None:
-        load_type = weights_loader
+        load_type = weights_loader#train的时候采用
     elif '.weights' in path:
         load_type = weights_loader
     else: 
@@ -137,7 +139,7 @@ class weights_walker(object):
             self.eof = True
         return float32_1D_array
 
-def model_name(file_path):
+def model_name(file_path):#返回模型的名字
     file_name = basename(file_path)
     ext = str()
     if '.' in file_name: # exclude extension

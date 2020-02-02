@@ -14,10 +14,9 @@ class Layer(object):
         self.wsize = dict() # weight size
         self.setup(*args[2:]) # set attr up
         self.present()
-        for var in self.wshape:
-            shp = self.wshape[var]
-            size = np.prod(shp)
-            self.wsize[var] = size
+        for var in self.wshape:#分为biases和kernel，在setup里有初始化wshape
+            #保存每种var对应的元素个数
+            self.wsize[var] = np.prod(self.wshape[var])#计算var对应数组里 所有元素的乘积
 
     def load(self, src_loader):
         var_lay = src_loader.VAR_LAYER
@@ -32,6 +31,7 @@ class Layer(object):
             self.recollect(wdict)
 
     def load_weights(self, src_loader):
+        #[]是为了和loader的load里保存的src_key保持一致，但为什么不同时不要[]??  ckpt_loader参数不同，且有多个
         val = src_loader([self.presenter])
         if val is None: return None
         else: return val.w
@@ -66,6 +66,6 @@ class Layer(object):
         return sig
 
     def recollect(self, w): self.w = w
-    def present(self): self.presenter = self
-    def setup(self, *args): pass
+    def present(self): self.presenter = self#被子类覆盖，有些层的presenter并不是自身
+    def setup(self, *args): pass#被子类覆盖
     def finalize(self): pass 

@@ -36,16 +36,16 @@ class BaseOp(object):
         self.gap = roof - self.num
         self.var = not self.gap > 0
         self.act = 'Load '
-        self.convert(feed)
+        self.convert(feed)#将保存参数的对象lay里的权重转化成命名空间里的tf变量
         if self.var: self.train_msg = 'Yep! '
         else: self.train_msg = 'Nope '
-        self.forward()
+        self.forward()#建立对应的tf网络层
 
     def convert(self, feed):
         """convert self.lay to variables & placeholders"""
-        for var in self.lay.wshape:
-            self.wrap_variable(var)
-        for ph in self.lay.h:
+        for var in self.lay.wshape:#参数 biase+weight
+            self.wrap_variable(var)#用 层序号-层类型 命名空间，将相应层的权重从memmap转化成tf的变量
+        for ph in self.lay.h:#dropout层会调用(dropout.py的dropout_layer类里参数是h)，
             self.wrap_pholder(ph, feed)
 
     def wrap_variable(self, var):
@@ -67,13 +67,13 @@ class BaseOp(object):
         val = self.lay.w[var]
         self.lay.w[var] = tf.constant_initializer(val)
         if var in self._SLIM: return
-        with tf.variable_scope(self.scope):
-            self.lay.w[var] = tf.get_variable(var,
+        with tf.variable_scope(self.scope):#用 层序号-层类型 命名空间
+            self.lay.w[var] = tf.get_variable(var,#将相应层的权重从memmap转化成tf的变量
                 shape = self.lay.wshape[var],
                 dtype = tf.float32,
                 initializer = self.lay.w[var])
 
-    def wrap_pholder(self, ph, feed):
+    def wrap_pholder(self, ph, feed):#新建tf层时需要指定参数的那些层调用该函数建立pholder
         """wrap layer.h into placeholders"""
         phtype = type(self.lay.h[ph])
         if phtype is not dict: return
@@ -83,15 +83,15 @@ class BaseOp(object):
 
         self.lay.h[ph] = tf.placeholder_with_default(
             val['dfault'], val['shape'], name = sig)
-        feed[self.lay.h[ph]] = val['feed']
+        feed[self.lay.h[ph]] = val['feed']#在sess.run里调用
 
-    def verbalise(self): # console speaker
+    def verbalise(self): # console speaker  会被子类覆盖
         msg = str()
-        inp = _name(self.inp.out)
+        inp = _name(self.inp.out)#上一层的输出，build.build_forward函数里state初始化了
         if inp == 'input': \
         msg = FORM.format(
             '', '', 'input',
-            _shape(self.inp.out)) + '\n'
+            _shape(self.inp.out)) + '\n'#当前层是crop这种不改变out的size类型时 的输出信息
         if not self.act: return msg
         return msg + FORM.format(
             self.act, self.train_msg, 

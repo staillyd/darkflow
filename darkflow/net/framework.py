@@ -4,7 +4,7 @@ from . import vanilla
 from os.path import basename
 
 class framework(object):
-    constructor = vanilla.constructor
+    constructor = vanilla.constructor#被子类覆盖
     loss = vanilla.train.loss
     
     def __init__(self, meta, FLAGS):
@@ -12,7 +12,7 @@ class framework(object):
         model = '.'.join(model.split('.')[:-1])
         meta['name'] = model
         
-        self.constructor(meta, FLAGS)
+        self.constructor(meta, FLAGS)#被子类覆盖
 
     def is_inp(self, file_name):
         return True
@@ -53,7 +53,7 @@ types = {
     '[region]': YOLOv2
 }
 
-def create_framework(meta, FLAGS):
+def create_framework(meta, FLAGS):#
     net_type = meta['type']
-    this = types.get(net_type, framework)
+    this = types.get(net_type, framework)#根据cfg文件里最后一个[]判断是采用YOLO还是YOLO2
     return this(meta, FLAGS)

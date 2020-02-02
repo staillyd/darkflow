@@ -44,3 +44,17 @@ ckpt/*
 
 #pytest cache
 .cache/
+
+#cython make
+darkflow/cython_utils/cy_yolo_findboxes.cpython-36m-x86_64-linux-gnu.so
+darkflow/cython_utils/cy_yolo2_findboxes.cpython-36m-x86_64-linux-gnu.so
+darkflow/cython_utils/nms.cpython-36m-x86_64-linux-gnu.so
+
+#vscode
+#.vscode/
+
+#tf borad
+out_graph/
+
+#paper
+paper/

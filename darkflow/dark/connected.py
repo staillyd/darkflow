@@ -95,7 +95,7 @@ class connected_layer(Layer):
         self.activation = activation
         self.inp = input_size
         self.out = output_size
-        self.wshape = {
+        self.wshape = {#权重的size
             'biases': [self.out],
             'weights': [self.inp, self.out]
         }

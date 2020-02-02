@@ -21,7 +21,7 @@ op_types = {
 	'conv-extract': conv_extract,
 	'extract': extract
 }
-
+#工厂模式
 def op_create(*args):
 	layer_type = list(args)[0].type
 	return op_types[layer_type](*args)

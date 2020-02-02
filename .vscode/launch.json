@@ -1,0 +1,66 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "yolo-v1-tiny cpu test",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "--imgdir",
+                "sample_img/",
+                "--model",
+                "cfg/v1/yolo-tiny.cfg",
+                "--load",
+                "bin/yolo-tiny.weights",
+                "--gpu",
+                "0.0",
+                "--summary",
+                "out_graph/yolo-tiny/"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "yolo-v1-tiny cpu train",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "--model",
+                "cfg/v1/yolo-tiny.cfg",
+                "--gpu",
+                "0.0",
+                "--summary",
+                "out_graph/yolo-tiny/",
+                "--train",
+                "--dataset",
+                "~/DataSets/VOC2007/TrainVal/JPEGImages",
+                "--annotation",
+                "~/DataSets/VOC2007/TrainVal/Annotations",
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "yolo-v1-full cpu",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "--imgdir",
+                "sample_img/",
+                "--model",
+                "cfg/v1/yolo-full.cfg",
+                "--load",
+                "bin/yolo-full.weights",
+                "--gpu",
+                "0.0",
+                "--summary",
+                "out_graph/yolo-full/"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

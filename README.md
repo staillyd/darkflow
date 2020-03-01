@@ -275,3 +275,10 @@ flow --pbLoad built_graph/yolo.pb --metaLoad built_graph/yolo.meta --imgdir samp
 If you'd like to load a `.pb` and `.meta` file when using `return_predict()` you can set the `"pbLoad"` and `"metaLoad"` options in place of the `"model"` and `"load"` options you would normally set.
 
 That's all.
+
+# 解读yolo v1
+- 主要是网络输出与真值拟合，真值、预测值和损失函数是关键。
+- 真值在[data](darkflow/net/yolo/data.py)._batch()中
+- 损失函数在[train](darkflow/net/yolo/train.py).loss()中
+- 预测在[cy_yolo_findboxes](darkflow/cython_utils/cy_yolo_findboxes.pyx).yolo_box_constructor()里
+- yolo v1框架[解读视频](vedio/YOLO/yolo.mp4)

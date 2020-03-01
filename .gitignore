@@ -40,7 +40,7 @@ summary/
 built_graph/
 
 #Training checkpoints
-ckpt/*
+ckpt/
 
 #pytest cache
 .cache/
@@ -58,3 +58,6 @@ out_graph/
 
 #paper
 paper/
+
+#vedio
+vedio/
